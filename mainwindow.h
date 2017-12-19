@@ -19,6 +19,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+
 private slots:
 
     void on_heapTypeCombox_currentIndexChanged(int index);
@@ -36,6 +37,7 @@ private:
     QList<QLineEdit*> lineEditList;
     QVBoxLayout* vBox;
     QGraphicsScene* scene;
+
 
     void createNewHeap();
     void recreateHeap();

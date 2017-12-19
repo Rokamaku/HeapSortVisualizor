@@ -15,6 +15,8 @@
 
 #define NODE_SIZE 30
 
+#define FIRST_LV_DISTANCE 25
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -36,6 +38,7 @@ MainWindow::~MainWindow()
 void MainWindow::setupListInputterUI()
 {
     this->vBox = new QVBoxLayout();
+//    vBox->installEventFilter(this);
     QWidget* contentWidget = new QWidget();
     QLineEdit* firstLineEdit = new QLineEdit();
     QObject::connect(firstLineEdit, SIGNAL(textEdited(QString)), this, SLOT(elementEditedSlot(QString)));
@@ -64,8 +67,8 @@ void MainWindow::elementEditedSlot(QString content) {
     }
     else if (content[0] == '-' && content.size() == 1) {
         return;
-    }
-    else {
+    } else {
+        sortList();
         QMessageBox::critical(this, "Error", "You need to enter a number", QMessageBox::Ok);
         return;
     }
@@ -76,8 +79,11 @@ void MainWindow::elementEditedSlot(QString content) {
 void MainWindow::sortList() {
     std::vector<int> unsortedList;
     for (unsigned int idxEditLine = 0; idxEditLine < this->lineEditList.size(); idxEditLine++) {
-        if (this->lineEditList[idxEditLine]->text().size() != 0)
-            unsortedList.push_back(lineEditList[idxEditLine]->text().toInt());
+        bool convertOK;
+        int newNum = this->lineEditList[idxEditLine]->text().toInt(&convertOK);
+        if (this->lineEditList[idxEditLine]->text().size() != 0
+                & convertOK)
+            unsortedList.push_back(newNum);
     }
     sorter->buildHeap(unsortedList);
     scene->items().clear();
@@ -202,10 +208,11 @@ void MainWindow::drawBelowNode(std::vector<int> heapArr, int curLevel, int currN
 }
 
 int MainWindow::calculateEdgeDistance(int curLevel) {
-    int distance = 0;
-    for (int idxLevel = 1; idxLevel <= curLevel; idxLevel++) {
-        distance += idxLevel * 10 + 30;
+    int distance = FIRST_LV_DISTANCE;
+    for (int idxCurLv = 2; idxCurLv <= curLevel; idxCurLv++) {
+        distance = 2 * distance;
     }
+
     return distance;
 }
 
