@@ -30,6 +30,8 @@ private slots:
 
     void on_closeBtn_clicked();
 
+    void on_startBtn_clicked();
+
 private:
     int heapType;
     HeapSort* sorter;

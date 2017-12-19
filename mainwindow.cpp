@@ -58,16 +58,11 @@ void MainWindow::on_heapTypeCombox_currentIndexChanged(int index)
 }
 
 void MainWindow::elementEditedSlot(QString content) {
-    recreateHeap();
-
     bool convertOK;
     content.toInt(&convertOK, 10);
-    if (convertOK) {
-        sortList();
-    }
-    else if (content[0] == '-' && content.size() == 1) {
+    if (content[0] == '-' && content.size() == 1)
         return;
-    } else {
+    else if (!convertOK) {
         sortList();
         QMessageBox::critical(this, "Error", "You need to enter a number", QMessageBox::Ok);
         return;
@@ -165,7 +160,7 @@ void MainWindow::drawLeftNode(std::vector<int> heapArr, int curLevel, int currNo
     scene->addItem(ellipse2);
     scene->addItem(text2);
 
-//    QGraphicsLineItem* line1 = new QGraphicsLineItem(2,22,-95,62);
+
     QGraphicsLineItem* line1 = new QGraphicsLineItem(prevNode.rx() + 2, prevNode.ry() + 22,
                                                      currNodePoint.rx() + 25, currNodePoint.ry() + 2);
     line1->setPen(pen);
@@ -187,7 +182,7 @@ void MainWindow::drawRightNode(std::vector<int> heapArr, int curLevel, int currN
     scene->addItem(ellipse3);
     scene->addItem(text3);
 
-//    QGraphicsLineItem* line2 = new QGraphicsLineItem(28,22,125,62);
+
     QGraphicsLineItem* line2 = new QGraphicsLineItem(prevNode.rx() + 28, prevNode.ry() + 22,
                                                      currNodePoint.rx() + 5, currNodePoint.ry() + 2);
     line2->setPen(pen);
@@ -239,4 +234,10 @@ void MainWindow::on_clearBtn_clicked()
 void MainWindow::on_closeBtn_clicked()
 {
     qApp->exit();
+}
+
+void MainWindow::on_startBtn_clicked()
+{
+    recreateHeap();
+    sortList();
 }
