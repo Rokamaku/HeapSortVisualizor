@@ -1,0 +1,22 @@
+#ifndef BUILDHEAPITERATOR_H
+#define BUILDHEAPITERATOR_H
+#include "HeapLogger.h"
+
+#include <vector>
+
+class HeapLoggerIterator
+{
+private:
+    std::vector<HeapLogger> log;
+    int index;
+public:
+    HeapLoggerIterator(std::vector<HeapLogger>);
+    ~HeapLoggerIterator();
+    bool hasPrev();
+    bool hasNext();
+    HeapLogger next();
+    HeapLogger prev();
+    HeapLogger curr();
+};
+
+#endif // BUILDHEAPITERATOR_H

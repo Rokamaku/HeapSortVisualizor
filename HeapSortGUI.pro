@@ -30,7 +30,9 @@ SOURCES += \
     HeapSort.cpp \
     MaxHeap.cpp \
     MinHeap.cpp \
-    HeapArrayUtility.cpp
+    HeapArrayUtility.cpp \
+    HeapLogger.cpp \
+    HeapLoggerTraverser.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -38,7 +40,9 @@ HEADERS += \
     HeapSort.h \
     MaxHeap.h \
     MinHeap.h \
-    HeapArrayUtility.h
+    HeapArrayUtility.h \
+    HeapLogger.h \
+    HeapLoggerTraverser.h
 
 FORMS += \
         mainwindow.ui

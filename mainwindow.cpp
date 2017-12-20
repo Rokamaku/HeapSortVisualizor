@@ -1,5 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "HeapArrayUtility.h"
+#include "HeapLoggerTraverser.h"
+
 #include <QMessageBox>
 #include <QLineEdit>
 #include <QVBoxLayout>
@@ -8,7 +11,9 @@
 #include <QGraphicsItem>
 #include <QGraphicsPathItem>
 #include <QGraphicsLineItem>
-#include "HeapArrayUtility.h"
+#include <QPropertyAnimation>
+#include <QParallelAnimationGroup>
+
 
 #define MAX_HEAP_SELECTION 0
 #define MIN_HEAP_SELECTION 1
@@ -38,7 +43,6 @@ MainWindow::~MainWindow()
 void MainWindow::setupListInputterUI()
 {
     this->vBox = new QVBoxLayout();
-//    vBox->installEventFilter(this);
     QWidget* contentWidget = new QWidget();
     QLineEdit* firstLineEdit = new QLineEdit();
     QObject::connect(firstLineEdit, SIGNAL(textEdited(QString)), this, SLOT(elementEditedSlot(QString)));
@@ -52,9 +56,8 @@ void MainWindow::setupListInputterUI()
 void MainWindow::on_heapTypeCombox_currentIndexChanged(int index)
 {
     this->heapType = index;
-    recreateHeap();
-    sortList();
-    drawHeap();
+    runCurrentHeap();
+
 }
 
 void MainWindow::elementEditedSlot(QString content) {
@@ -81,9 +84,6 @@ void MainWindow::sortList() {
             unsortedList.push_back(newNum);
     }
     sorter->buildHeap(unsortedList);
-    scene->items().clear();
-    scene->clear();
-    drawHeap();
     std::vector<int> sortedList = sorter->getSortedList();
     QString sortedListStr;
     for (unsigned int idxElement = 0; idxElement < sortedList.size(); idxElement++) {
@@ -121,8 +121,11 @@ void MainWindow::recreateHeap() {
     createNewHeap();
 }
 
-void MainWindow::drawHeap() {
-    std::vector<int> heapArr = sorter->getHeap()->getHeapArr();
+void MainWindow::drawHeap(std::vector<int> heapArr) {
+    scene->clear();
+
+    if (heapArr.size() == 0)
+        return;
 
     int heapHeight = HeapArrayUtility::getHeapHeight(heapArr.size());
 
@@ -133,15 +136,30 @@ void MainWindow::drawHeap() {
     drawRootNode(heapArr, heapHeight, 0, brush, pen);
 }
 
+void MainWindow::runCurrentHeap() {
+    recreateHeap();
+    sortList();
+
+    loggerTraverser = new HeapLoggerTraverser(sorter->getHeap()->getBuildLogger(),
+                                              sorter->getHeap()->getPopLogger());
+    if (loggerTraverser->hasNext())
+        drawHeap(loggerTraverser->next().getCurrentHeap());
+
+    ui->nextBtn->setEnabled(true);
+    ui->prevBtn->setEnabled(true);
+    ui->skipBtn->setEnabled(true);
+
+}
+
 void MainWindow::drawRootNode(std::vector<int> heapArr, int curLevel ,int currNodePos, QBrush brush, QPen pen) {
 
-    QGraphicsEllipseItem* currNode = new QGraphicsEllipseItem(0, 0, NODE_SIZE, NODE_SIZE);
-    currNode->setBrush(brush);
-    currNode->setPen(pen);
-    QGraphicsTextItem* text1 = new QGraphicsTextItem(QString::number(heapArr[currNodePos]));
-    text1->setPos(2,2);
-    scene->addItem(currNode);
-    scene->addItem(text1);
+    QGraphicsEllipseItem* bound = new QGraphicsEllipseItem(0, 0, NODE_SIZE, NODE_SIZE);
+    bound->setBrush(brush);
+    bound->setPen(pen);
+    QGraphicsTextItem* content = new QGraphicsTextItem(QString::number(heapArr[currNodePos]));
+    content->setPos(2,2);
+    scene->addItem(bound);
+    scene->addItem(content);
 
     drawBelowNode(heapArr, curLevel, currNodePos, QPoint(0,0), brush, pen);
 
@@ -151,20 +169,20 @@ void MainWindow::drawLeftNode(std::vector<int> heapArr, int curLevel, int currNo
                               QPoint prevNode, QBrush brush, QPen pen) {
 
     QPoint currNodePoint(prevNode.rx() - calculateEdgeDistance(curLevel), prevNode.ry() + 60);
-    QGraphicsEllipseItem* ellipse2 = new QGraphicsEllipseItem(currNodePoint.rx(), currNodePoint.ry(),
+    QGraphicsEllipseItem* bound = new QGraphicsEllipseItem(currNodePoint.rx(), currNodePoint.ry(),
                                                               NODE_SIZE, NODE_SIZE);
-    ellipse2->setBrush(brush);
-    ellipse2->setPen(pen);
-    QGraphicsTextItem* text2 = new QGraphicsTextItem(QString::number(heapArr[currNodePos]));
-    text2->setPos(currNodePoint);
-    scene->addItem(ellipse2);
-    scene->addItem(text2);
+    bound->setBrush(brush);
+    bound->setPen(pen);
+    QGraphicsTextItem* content = new QGraphicsTextItem(QString::number(heapArr[currNodePos]));
+    content->setPos(currNodePoint);
+    scene->addItem(bound);
+    scene->addItem(content);
 
 
-    QGraphicsLineItem* line1 = new QGraphicsLineItem(prevNode.rx() + 2, prevNode.ry() + 22,
+    QGraphicsLineItem* lineConnect = new QGraphicsLineItem(prevNode.rx() + 2, prevNode.ry() + 22,
                                                      currNodePoint.rx() + 25, currNodePoint.ry() + 2);
-    line1->setPen(pen);
-    scene->addItem(line1);
+    lineConnect->setPen(pen);
+    scene->addItem(lineConnect);
 
     drawBelowNode(heapArr, curLevel, currNodePos, currNodePoint, brush, pen);
 }
@@ -173,20 +191,20 @@ void MainWindow::drawRightNode(std::vector<int> heapArr, int curLevel, int currN
                                QPoint prevNode, QBrush brush, QPen pen) {
 
     QPoint currNodePoint(prevNode.rx() + calculateEdgeDistance(curLevel), prevNode.ry() + 60);
-    QGraphicsEllipseItem* ellipse3 = new QGraphicsEllipseItem(currNodePoint.rx(), currNodePoint.ry(),
+    QGraphicsEllipseItem* bound = new QGraphicsEllipseItem(currNodePoint.rx(), currNodePoint.ry(),
                                                               NODE_SIZE, NODE_SIZE);
-    ellipse3->setBrush(brush);
-    ellipse3->setPen(pen);
-    QGraphicsTextItem* text3 = new QGraphicsTextItem(QString::number(heapArr[currNodePos]));
-    text3->setPos(currNodePoint);
-    scene->addItem(ellipse3);
-    scene->addItem(text3);
+    bound->setBrush(brush);
+    bound->setPen(pen);
+    QGraphicsTextItem* content = new QGraphicsTextItem(QString::number(heapArr[currNodePos]));
+    content->setPos(currNodePoint);
+    scene->addItem(bound);
+    scene->addItem(content);
 
 
-    QGraphicsLineItem* line2 = new QGraphicsLineItem(prevNode.rx() + 28, prevNode.ry() + 22,
+    QGraphicsLineItem* lineConnect = new QGraphicsLineItem(prevNode.rx() + 28, prevNode.ry() + 22,
                                                      currNodePoint.rx() + 5, currNodePoint.ry() + 2);
-    line2->setPen(pen);
-    scene->addItem(line2);
+    lineConnect->setPen(pen);
+    scene->addItem(lineConnect);
 
     drawBelowNode(heapArr, curLevel, currNodePos, currNodePoint, brush, pen);
 }
@@ -229,6 +247,10 @@ void MainWindow::on_clearBtn_clicked()
     ui->resultTxtEdit->setText("");
 
     setupListInputterUI();
+
+    ui->nextBtn->setEnabled(false);
+    ui->prevBtn->setEnabled(false);
+    ui->skipBtn->setEnabled(false);
 }
 
 void MainWindow::on_closeBtn_clicked()
@@ -238,6 +260,25 @@ void MainWindow::on_closeBtn_clicked()
 
 void MainWindow::on_startBtn_clicked()
 {
-    recreateHeap();
-    sortList();
+    runCurrentHeap();
+}
+
+void MainWindow::on_nextBtn_clicked()
+{
+    if (loggerTraverser->hasNext())
+        drawHeap(loggerTraverser->next().getCurrentHeap());
+}
+
+void MainWindow::on_prevBtn_clicked()
+{
+    if (loggerTraverser->hasPrev())
+        drawHeap(loggerTraverser->prev().getCurrentHeap());
+}
+
+void MainWindow::on_skipBtn_clicked()
+{
+    if (loggerTraverser->hasEndBuildHeap())
+        drawHeap(loggerTraverser->endPop().getCurrentHeap());
+    else
+        drawHeap(loggerTraverser->endBuild().getCurrentHeap());
 }

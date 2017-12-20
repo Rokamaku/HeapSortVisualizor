@@ -6,12 +6,21 @@
 
 void BaseHeap::heapify(int newVal) {
     heapArr.push_back(newVal);
+
+    buildLogger.push_back(HeapLogger(heapArr));
+
     siftUp(heapArr.size() - 1);
 }
 
 int BaseHeap::popRootVal() {
     int rootPopedVal = heapArr[ROOT_POSITION];
+
+    popLogger.push_back(HeapLogger(heapArr));
+
     moveLastNode2Root();
+
+    popLogger.push_back(HeapLogger(heapArr));
+
     siftDown(ROOT_POSITION);
     return rootPopedVal;
 }
@@ -49,7 +58,6 @@ void BaseHeap::siftDown(int parentPos) {
     if (HeapArrayUtility::isPosOverHeapSize(heapArr.size(), rightChildPos)
             && !HeapArrayUtility::isPosOverHeapSize(heapArr.size(), leftChildPos)
             && doesSiftNeed(heapArr[leftChildPos], heapArr[parentPos])) {
-        swapNode(parentPos, leftChildPos);
         siftDownLeftChild(leftChildPos, parentPos);
         return;
     }
@@ -63,11 +71,13 @@ void BaseHeap::siftDown(int parentPos) {
 }
 
 void BaseHeap::siftDownLeftChild(int leftChildPos, int parentPos) {
+    popLogger.push_back(HeapLogger(leftChildPos, parentPos, heapArr));
     swapNode(parentPos, leftChildPos);
     siftDown(leftChildPos);
 }
 
 void BaseHeap::siftDownRightChild(int rightChildPos, int parentPos) {
+    popLogger.push_back(HeapLogger(rightChildPos, parentPos, heapArr));
     swapNode(parentPos, rightChildPos);
     siftDown(rightChildPos);
 }
@@ -77,6 +87,7 @@ void BaseHeap::siftUp(int childPos) {
     if (!doesSiftNeed(heapArr[childPos], heapArr[parentPos])
             || childPos == ROOT_POSITION)
         return;
+    buildLogger.push_back(HeapLogger(childPos, parentPos, heapArr));
     swapNode(childPos, parentPos);
     siftUp(parentPos);
 }
@@ -97,4 +108,7 @@ void BaseHeap::swapNode(int firstPos, int secondPos) {
 BaseHeap::~BaseHeap() {
     heapArr.clear();
     heapArr.shrink_to_fit();
+
+    cloneHeap.clear();
+    cloneHeap.shrink_to_fit();
 }

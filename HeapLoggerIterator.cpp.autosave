@@ -1,0 +1,38 @@
+#include "HeapLoggerIterator.h"
+
+HeapLoggerIterator::HeapLoggerIterator(std::vector<HeapLogger> logger) {
+    this->log = logger;
+    index = 0;
+}
+
+bool HeapLoggerIterator::hasNext() {
+    if (index == log.size()) {
+        return false;
+    }
+    return true;
+}
+
+bool HeapLoggerIterator::hasPrev() {
+    if (index == 0)
+        return false;
+    return true;
+}
+
+HeapLogger HeapLoggerIterator::next() {
+    if (this->hasNext())
+        return log[index++];
+}
+
+HeapLogger HeapLoggerIterator::prev() {
+    if (this->hasPrev())
+        return log[index--];
+}
+
+HeapLogger HeapLoggerIterator::curr() {
+    return log[index];
+}
+
+HeapLoggerIterator::~HeapLoggerIterator() {
+    log.clear();
+    log.shrink_to_fit();
+}

@@ -1,0 +1,10 @@
+#include "BuildHeapIterator.h"
+
+BuildHeapIterator::BuildHeapIterator(std::vector<HeapLogger> logger) {
+    this->log = logger;
+    index
+}
+
+bool BuildHeapIterator::hasNext() {
+    if (index)
+}
